@@ -14,12 +14,6 @@ func Unpack(s string) (string, error) {
 	isMask := false
 
 	for index, char := range runeString {
-		if index == 0 {
-			if isDigit(char) {
-				return "", ErrInvalidString
-			}
-		}
-
 		if isMask {
 			resultString.WriteRune(char)
 			isMask = false
@@ -38,9 +32,9 @@ func Unpack(s string) (string, error) {
 			if num > 0 {
 				resultString.WriteString(strings.Repeat(string(runeString[index-1]), num-1))
 			} else {
-				tmp := resultString.String()
+				tmp := []rune(resultString.String())
 				resultString.Reset()
-				resultString.WriteString(tmp[:len(tmp)-1])
+				resultString.WriteString(string(tmp[:len(tmp)-1]))
 			}
 		} else {
 			resultString.WriteRune(char)
