@@ -1,9 +1,17 @@
 package hw03frequencyanalysis
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 )
+
+var mask = regexp.MustCompile(`^[^\wа-яА-ЯёЁ]+|[^\wа-яА-ЯёЁ]+$`)
+
+func cleaningWord(s string) string {
+	cleanWord := strings.ToLower(s)
+	return mask.ReplaceAllString(cleanWord, "")
+}
 
 func Top10(inputStr string) []string {
 	if len(inputStr) == 0 {
@@ -11,8 +19,12 @@ func Top10(inputStr string) []string {
 	}
 
 	freqMap := map[string]int{}
+
 	for _, word := range strings.Fields(inputStr) {
-		freqMap[word]++
+		cleanWord := cleaningWord(word)
+		if cleanWord != "" {
+			freqMap[cleanWord]++
+		}
 	}
 
 	type freqStruct struct {
