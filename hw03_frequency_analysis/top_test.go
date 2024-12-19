@@ -48,6 +48,14 @@ func TestTop10(t *testing.T) {
 		require.Len(t, Top10(""), 0)
 	})
 
+	t.Run("only hyphen", func(t *testing.T) {
+		require.Len(t, Top10("- - - -"), 0)
+	})
+
+	t.Run("similar_word", func(t *testing.T) {
+		require.Equal(t, Top10("нога нога, нога! Нога"), []string{"нога"})
+	})
+
 	t.Run("positive test", func(t *testing.T) {
 		if taskWithAsteriskIsCompleted {
 			expected := []string{
