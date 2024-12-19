@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed.
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = true
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -46,6 +46,14 @@ var text = `Как видите, он  спускается  по  лестни�
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
+	})
+
+	t.Run("only hyphen", func(t *testing.T) {
+		require.Len(t, Top10("- - - -"), 0)
+	})
+
+	t.Run("similar_word", func(t *testing.T) {
+		require.Equal(t, Top10("нога нога, нога! Нога"), []string{"нога"})
 	})
 
 	t.Run("positive test", func(t *testing.T) {
