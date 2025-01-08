@@ -18,6 +18,7 @@ func TestList(t *testing.T) {
 	t.Run("remove nil", func(t *testing.T) {
 		l := NewList()
 		l.Remove(nil)
+		require.Equal(t, 0, l.Len())
 	})
 
 	t.Run("remove first", func(t *testing.T) {
