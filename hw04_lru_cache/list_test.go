@@ -15,6 +15,18 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("remove nil", func(t *testing.T) {
+		l := NewList()
+		l.Remove(nil)
+	})
+
+	t.Run("remove first", func(t *testing.T) {
+		l := NewList()
+		item := l.PushFront(10)
+		l.Remove(item)
+		require.Equal(t, 0, l.Len())
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
