@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -38,19 +39,42 @@ func TestRun(t *testing.T) {
 		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
 	})
 
+	t.Run("tasks with zero m", func(t *testing.T) {
+		tasksCount := 50
+		tasks := make([]Task, 0, tasksCount)
+		var runTasksCount int32
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+				atomic.AddInt32(&runTasksCount, 1)
+				return nil
+			})
+		}
+		workersCount := 10
+		maxErrorsCount := 0
+		err := Run(tasks, workersCount, maxErrorsCount)
+		require.NoError(t, err)
+	})
+
 	t.Run("tasks without errors", func(t *testing.T) {
 		tasksCount := 50
 		tasks := make([]Task, 0, tasksCount)
+		mu := sync.Mutex{}
 
 		var runTasksCount int32
-		var sumTime time.Duration
-
+		var currentTaskCount int32
+		var tempInt int32
 		for i := 0; i < tasksCount; i++ {
-			taskSleep := time.Millisecond * time.Duration(rand.Intn(100))
-			sumTime += taskSleep
-
 			tasks = append(tasks, func() error {
-				time.Sleep(taskSleep)
+				atomic.AddInt32(&currentTaskCount, 1)
+				defer atomic.AddInt32(&currentTaskCount, -1)
+
+				mu.Lock()
+				for tempInt = 0; tempInt < 100000; {
+					tempInt++
+				}
+				mu.Unlock()
+
 				atomic.AddInt32(&runTasksCount, 1)
 				return nil
 			})
@@ -58,13 +82,19 @@ func TestRun(t *testing.T) {
 
 		workersCount := 5
 		maxErrorsCount := 1
+		var err error
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err = Run(tasks, workersCount, maxErrorsCount)
+		}()
 
-		start := time.Now()
-		err := Run(tasks, workersCount, maxErrorsCount)
-		elapsedTime := time.Since(start)
-		require.NoError(t, err)
-
+		require.Eventually(t, func() bool {
+			return atomic.LoadInt32(&currentTaskCount) >= int32(3)
+		}, time.Second*5, time.Millisecond, "tasks were run sequentially?")
+		wg.Wait()
 		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
-		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
+		require.NoError(t, err)
 	})
 }
