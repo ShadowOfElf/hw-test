@@ -14,8 +14,6 @@ const (
 	fault         = sleepPerStage / 2
 )
 
-var isFullTesting = true
-
 func TestPipeline(t *testing.T) {
 	// Stage generator
 	g := func(_ string, f func(v interface{}) interface{}) Stage {
@@ -36,8 +34,25 @@ func TestPipeline(t *testing.T) {
 		g("Dummy", func(v interface{}) interface{} { return v }),
 		g("Multiplier (* 2)", func(v interface{}) interface{} { return v.(int) * 2 }),
 		g("Adder (+ 100)", func(v interface{}) interface{} { return v.(int) + 100 }),
+		nil, // проверка отсечения нулевых стейджей
 		g("Stringifier", func(v interface{}) interface{} { return strconv.Itoa(v.(int)) }),
 	}
+
+	t.Run("no stage", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+		result := make([]int, 0, 5)
+		for s := range ExecutePipeline(in, nil, nil) {
+			result = append(result, s.(int))
+		}
+		require.Equal(t, data, result)
+	})
 
 	t.Run("simple case", func(t *testing.T) {
 		in := make(Bi)
@@ -96,9 +111,6 @@ func TestPipeline(t *testing.T) {
 }
 
 func TestAllStageStop(t *testing.T) {
-	if !isFullTesting {
-		return
-	}
 	wg := sync.WaitGroup{}
 	// Stage generator
 	g := func(_ string, f func(v interface{}) interface{}) Stage {
