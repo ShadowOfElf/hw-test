@@ -28,7 +28,8 @@ func stageBuilder(in In, done In, stage Stage) Out {
 			select {
 			case <-done:
 				go func() {
-					for range in {
+					for i := range in {
+						_ = i
 					}
 				}()
 				close(out)
