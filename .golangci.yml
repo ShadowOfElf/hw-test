@@ -2,7 +2,7 @@ run:
   tests: true
   build-tags:
     - bench
-    - !bench
+    - "!bench"
 
 linters-settings:
   funlen:
@@ -16,6 +16,7 @@ linters-settings:
           - "!$test"
         allow:
           - $gostd
+          - github.com/cheggaaa/pb/v3
       Test:
         files:
           - $test
