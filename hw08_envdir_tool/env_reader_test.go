@@ -19,6 +19,10 @@ func TestReadDir(t *testing.T) {
 	})
 
 	t.Run("empty_dir", func(t *testing.T) {
+		_ = os.Mkdir("testdata/empty_dir", 0o644)
+		defer func() {
+			_ = os.Remove("testdata/empty_dir")
+		}()
 		env, err := ReadDir("./testdata/empty_dir")
 		require.NoError(t, err)
 		require.Len(t, env, 0)
