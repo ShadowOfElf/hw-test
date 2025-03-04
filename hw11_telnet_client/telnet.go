@@ -89,7 +89,6 @@ func (c *clientT) Receive() error {
 
 	for {
 		line, err := reader.ReadString('\n')
-
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, net.ErrClosed) {
 				return nil

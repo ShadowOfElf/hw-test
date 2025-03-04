@@ -62,7 +62,6 @@ func TelnetWork(clientTelnet TelnetClient) {
 	}()
 
 	go func() {
-
 		if err := clientTelnet.Receive(); err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "read msg from server error: %s\n", err)
 		}

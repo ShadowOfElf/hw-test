@@ -79,5 +79,4 @@ func TestTelnetClient(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, errorDoubleConnect, err)
 	})
-
 }
