@@ -1,0 +1,18 @@
+=== RUN   TestGetDomainStat
+=== RUN   TestGetDomainStat/find_'com'
+=== RUN   TestGetDomainStat/find_'gov'
+=== RUN   TestGetDomainStat/find_'unknown'
+=== RUN   TestGetDomainStat/wrong_decode_skip
+=== RUN   TestGetDomainStat/empty_domain
+=== RUN   TestGetDomainStat/wrong_email_format
+=== RUN   TestGetDomainStat/wrong_reader
+--- PASS: TestGetDomainStat (0.00s)
+    --- PASS: TestGetDomainStat/find_'com' (0.00s)
+    --- PASS: TestGetDomainStat/find_'gov' (0.00s)
+    --- PASS: TestGetDomainStat/find_'unknown' (0.00s)
+    --- PASS: TestGetDomainStat/wrong_decode_skip (0.00s)
+    --- PASS: TestGetDomainStat/empty_domain (0.00s)
+    --- PASS: TestGetDomainStat/wrong_email_format (0.00s)
+    --- PASS: TestGetDomainStat/wrong_reader (0.00s)
+PASS
+ok  	github.com/fixme_my_friend/hw10_program_optimization	(cached)
