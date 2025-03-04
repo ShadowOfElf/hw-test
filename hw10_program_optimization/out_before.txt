@@ -1,0 +1,10 @@
+=== RUN   TestGetDomainStat
+=== RUN   TestGetDomainStat/find_'com'
+=== RUN   TestGetDomainStat/find_'gov'
+=== RUN   TestGetDomainStat/find_'unknown'
+--- PASS: TestGetDomainStat (1.39s)
+    --- PASS: TestGetDomainStat/find_'com' (0.41s)
+    --- PASS: TestGetDomainStat/find_'gov' (0.39s)
+    --- PASS: TestGetDomainStat/find_'unknown' (0.59s)
+PASS
+ok  	github.com/fixme_my_friend/hw10_program_optimization	2.694s
