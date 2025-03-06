@@ -36,45 +36,6 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	return countDomains(u, domain)
 }
 
-// оставил на будущее, как пример мучений с горутинами
-// func oldGetUsers(r io.Reader) (result users, err error) {
-//	if err != nil {
-//		return
-//	}
-//	resCh := make(chan User, 10)
-//	ch := make(chan []byte, 10)
-//
-//	numWorkers := runtime.GOMAXPROCS(0)
-//	var wg sync.WaitGroup
-//	for i := 0; i < numWorkers; i++ {
-//		wg.Add(1)
-//		go func() {
-//			defer wg.Done()
-//			for line := range ch {
-//				var user User
-//				if err := json.Unmarshal(line, &user); err != nil {
-//					return
-//				}
-//				resCh <- user // Отправляем каждого пользователя сразу
-//			}
-//		}()
-//	}
-//	scanner := bufio.NewScanner(r)
-//	scanner.Split(bufio.ScanLines)
-//	go func() {
-//		defer close(resCh)
-//		for scanner.Scan() {
-//			ch <- scanner.Bytes()
-//		}
-//	}()
-//	wg.Wait()
-//	//close(resCh)
-//	for user := range resCh {
-//		result = append(result, user)
-//	}
-//	return
-//}
-
 func getUsers(r io.Reader) (chan User, error) {
 	if r == nil {
 		return nil, errorReader
