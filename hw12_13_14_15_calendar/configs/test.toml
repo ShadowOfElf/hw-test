@@ -1,0 +1,11 @@
+[logger]
+level = "DEBUG"
+
+[storage]
+type = "DB"
+net = "127.0.0.1"
+port = "5060"
+user = "postgres"
+password = "postgres"
+dbname = "events_db"
+sslmode = "disable"
