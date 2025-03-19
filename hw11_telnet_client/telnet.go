@@ -62,26 +62,32 @@ func (c *clientT) Connect() error {
 
 func (c *clientT) Send() error {
 	scanner := bufio.NewScanner(c.in)
-
-	for scanner.Scan() {
+	end := make(chan struct{})
+	go func() {
+		for scanner.Scan() {
+			select {
+			case <-done:
+				return
+			default:
+				line := scanner.Text() + "\n"
+				_, err := c.conn.Write([]byte(line))
+				if err != nil {
+					return
+				}
+			}
+		}
+		_, _ = fmt.Fprintf(os.Stderr, "Received EOF (Ctrl+D)...\n")
+		close(end)
+	}()
+	for {
 		select {
 		case <-done:
 			_, _ = fmt.Fprintf(os.Stderr, "received stop signal, exiting... \n")
 			return nil
-		default:
-			line := scanner.Text() + "\n"
-			_, err := c.conn.Write([]byte(line))
-			if err != nil {
-				return err
-			}
+		case <-end:
+			return nil
 		}
 	}
-
-	if err := scanner.Err(); err != nil && errors.Is(err, io.EOF) {
-		_, _ = fmt.Fprintf(os.Stderr, "Received EOF (Ctrl+D)...\n")
-		return nil
-	}
-	return nil
 }
 
 func (c *clientT) Receive() error {
