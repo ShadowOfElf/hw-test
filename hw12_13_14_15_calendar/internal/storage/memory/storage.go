@@ -2,30 +2,28 @@ package memorystorage
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
-	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/storage"
+	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/configs"
+	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/storage/unityres"
 )
 
-type EventList map[string]storage.Event
-
-var ErrDateBusy = errors.New("event already exists for this date")
+type EventList map[string]unityres.Event
 
 type StorageMem struct {
 	events EventList
 	mu     sync.RWMutex //nolint:unused
 }
 
-func New() storage.UnityStorageInterface {
+func New() unityres.UnityStorageInterface {
 	return &StorageMem{
 		events: make(EventList),
 	}
 }
 
-func (s *StorageMem) ListEventByDate(date time.Time) []storage.Event {
-	var result []storage.Event
+func (s *StorageMem) ListEventByDate(date time.Time) ([]unityres.Event, error) {
+	var result []unityres.Event
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for _, event := range s.events {
@@ -35,11 +33,11 @@ func (s *StorageMem) ListEventByDate(date time.Time) []storage.Event {
 			result = append(result, event)
 		}
 	}
-	return result
+	return result, nil
 }
 
-func (s *StorageMem) ListEventByWeak(startDate time.Time) []storage.Event {
-	var result []storage.Event
+func (s *StorageMem) ListEventByWeak(startDate time.Time) ([]unityres.Event, error) {
+	var result []unityres.Event
 	endDate := startDate.AddDate(0, 0, 7)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -48,11 +46,11 @@ func (s *StorageMem) ListEventByWeak(startDate time.Time) []storage.Event {
 			result = append(result, event)
 		}
 	}
-	return result
+	return result, nil
 }
 
-func (s *StorageMem) ListEventByMonth(startDate time.Time) []storage.Event {
-	var result []storage.Event
+func (s *StorageMem) ListEventByMonth(startDate time.Time) ([]unityres.Event, error) {
+	var result []unityres.Event
 	endDate := startDate.AddDate(0, 1, 0)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -61,27 +59,27 @@ func (s *StorageMem) ListEventByMonth(startDate time.Time) []storage.Event {
 			result = append(result, event)
 		}
 	}
-	return result
+	return result, nil
 }
 
-func (s *StorageMem) AddEvent(event storage.Event) error {
+func (s *StorageMem) AddEvent(event unityres.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, existEvent := range s.events {
 		if event.Date.Equal(existEvent.Date) {
-			return ErrDateBusy
+			return unityres.ErrDateBusy
 		}
 	}
 	s.events[event.ID] = event
 	return nil // в реализации с БД могут быть ошибки
 }
 
-func (s *StorageMem) EditEvent(id string, event storage.Event) error {
+func (s *StorageMem) EditEvent(id string, event unityres.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, existEvent := range s.events {
 		if event.Date.Equal(existEvent.Date) {
-			return ErrDateBusy
+			return unityres.ErrDateBusy
 		}
 	}
 
@@ -97,12 +95,12 @@ func (s *StorageMem) DeleteEvent(id string) error {
 	return nil
 }
 
-func (s *StorageMem) Connect(ctx context.Context, config interface{}) error {
+func (s *StorageMem) Connect(ctx context.Context, config configs.StorageConf) error {
 	_ = ctx
 	_ = config
 	return nil
 }
 
-func (s *StorageMem) Close(ctx context.Context) error {
+func (s *StorageMem) Close() error {
 	return nil
 }
