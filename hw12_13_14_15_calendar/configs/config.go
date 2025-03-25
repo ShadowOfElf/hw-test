@@ -12,6 +12,11 @@ type Config struct {
 	Logger    LoggerConf
 	StorageDB bool
 	Storage   StorageConf
+	HTTP      HTTPConf
+}
+
+type HTTPConf struct {
+	Addr string
 }
 
 type LoggerConf struct {
@@ -64,17 +69,26 @@ func NewConfig(configFile string) Config {
 		storage.DBName = dbName
 		storage.Address, err = net.ResolveTCPAddr("tcp", address)
 		if err != nil {
-			fmt.Println("host or port incorrect, using default")
-			storage.Address, _ = net.ResolveIPAddr("ip", "127.0.0.1:5432")
+			fmt.Println("host or port DB incorrect, using default")
+			storage.Address, _ = net.ResolveTCPAddr("tcp", "127.0.0.1:5432")
 		}
 	}
 
-	// TODO:  Тут надо в конфиге проверять есть ли нстройки бд и если нет то сторедж ин мемори
+	httpHost := viper.GetString("http.host")
+	httpPort := viper.GetString("http.port")
+
+	addr := net.JoinHostPort(httpHost, httpPort)
+	_, err = net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		fmt.Println("host or port HTTP incorrect, using default")
+		addr = "127.0.0.1:8070"
+	}
 
 	return Config{
 		Logger:    LoggerConf{Level: logger.LogLevel(logLevel)},
 		StorageDB: storageDB,
 		Storage:   storage,
+		HTTP:      HTTPConf{Addr: addr},
 	}
 }
 

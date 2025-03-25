@@ -13,7 +13,7 @@ type EventList map[string]unityres.Event
 
 type StorageMem struct {
 	events EventList
-	mu     sync.RWMutex //nolint:unused
+	mu     sync.RWMutex // nolint:unused,nolintlint
 }
 
 func New() unityres.UnityStorageInterface {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/configs"
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/storage/unityres"
-	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/stdlib" //nolint:depguard,nolintlint
 	"github.com/jmoiron/sqlx"
 )
 
@@ -63,7 +63,6 @@ func (s *Storage) AddEvent(event unityres.Event) error {
 		`SELECT COUNT(*) FROM events WHERE date_trunc('hour', date) = $1`,
 		event.Date.Format("2006-01-02 15:00:00"),
 	).Scan(&count)
-
 	if err != nil {
 		return err
 	}
@@ -92,7 +91,6 @@ func (s *Storage) AddEvent(event unityres.Event) error {
 		`,
 		queryArgs,
 	)
-
 	if err != nil {
 		return err
 	}

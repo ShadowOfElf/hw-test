@@ -48,29 +48,10 @@ func main() {
 			logg.Error(fmt.Sprintf("closing DB error: %s", err))
 		}
 	}()
-	//event := unityres.Event{
-	//	ID:                 "3",
-	//	Title:              "new title 2",
-	//	Date:               time.Now(),
-	//	Description:        "desc",
-	//	Duration:           time.Duration(10 * time.Second),
-	//	UserID:             1,
-	//	NotificationMinute: time.Duration(10 * time.Second),
-	//}
-	//err = Storage.AddEvent(event)
 
-	//err = Storage.DeleteEvent("1")
-	//if err != nil {
-	//	logg.Error(fmt.Sprintf("error on Add: %s", err))
-	//}
-	fmt.Println("!!!!!!!!!!!!!!!")
-	fmt.Println("!!!!!!!!!!!!!!!")
-	fmt.Println(Storage.ListEventByMonth(time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC)))
-	fmt.Println("!!!!!!!!!!!!!!!")
-	fmt.Println("!!!!!!!!!!!!!!!")
 	calendar := app.New(logg, Storage)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(logg, calendar, config.HTTP)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -78,7 +59,6 @@ func main() {
 
 	go func() {
 		<-ctx.Done()
-
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
@@ -89,7 +69,7 @@ func main() {
 
 	logg.Info("calendar is running...")
 
-	if err := server.Start(ctx); err != nil {
+	if err := server.Start(); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic

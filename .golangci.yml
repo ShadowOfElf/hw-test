@@ -1,3 +1,4 @@
+version: "2"
 run:
   tests: true
   build-tags:
@@ -18,12 +19,18 @@ linters-settings:
           - $gostd
           - github.com/cheggaaa/pb/v3
           - github.com/json-iterator/go
+          - github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar
+          - github.com/jackc/pgx/stdlib
+          - github.com/jmoiron/sqlx
+          - github.com/pkg/errors
+          - github.com/spf13/viper
       Test:
         files:
           - $test
         allow:
           - $gostd
           - github.com/stretchr/testify
+          - github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar
 
 issues:
   exclude-rules:
