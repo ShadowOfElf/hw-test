@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -13,8 +13,8 @@ import (
 type TelnetClient interface {
 	Connect() error
 	io.Closer
-	Send() error
-	Receive() error
+	Send(ctx context.Context) error
+	Receive(ctx context.Context) error
 }
 
 var (
@@ -60,28 +60,25 @@ func (c *clientT) Connect() error {
 	return nil
 }
 
-func (c *clientT) Send() error {
-	scanner := bufio.NewScanner(c.in)
+func (c *clientT) Send(ctx context.Context) error {
 	end := make(chan struct{})
 	go func() {
-		for scanner.Scan() {
-			select {
-			case <-done:
-				return
-			default:
-				line := scanner.Text() + "\n"
-				_, err := c.conn.Write([]byte(line))
-				if err != nil {
-					return
-				}
-			}
+		writer := &contextAwareWriter{
+			ctx:    ctx,
+			writer: c.conn,
 		}
-		_, _ = fmt.Fprintf(os.Stderr, "Received EOF (Ctrl+D)...\n")
+
+		_, err := io.Copy(writer, c.in)
+		if err != nil && errors.Is(err, context.Canceled) {
+			_, _ = fmt.Fprintf(os.Stderr, "Error during copy: %v\n", err)
+		}
+
 		close(end)
 	}()
+
 	for {
 		select {
-		case <-done:
+		case <-ctx.Done():
 			_, _ = fmt.Fprintf(os.Stderr, "received stop signal, exiting... \n")
 			return nil
 		case <-end:
@@ -90,21 +87,30 @@ func (c *clientT) Send() error {
 	}
 }
 
-func (c *clientT) Receive() error {
-	reader := bufio.NewReader(c.conn)
+type contextAwareWriter struct {
+	ctx    context.Context
+	writer io.Writer
+}
 
+func (w *contextAwareWriter) Write(p []byte) (n int, err error) {
+	select {
+	case <-w.ctx.Done():
+		return 0, context.Canceled
+	default:
+		return w.writer.Write(p)
+	}
+}
+
+func (c *clientT) Receive(ctx context.Context) error {
 	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, net.ErrClosed) {
-				return nil
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			_, err := io.Copy(c.out, c.conn)
+			if err != nil {
+				return err
 			}
-			return err
-		}
-
-		_, err = fmt.Fprint(c.out, line)
-		if err != nil {
-			return err
 		}
 	}
 }

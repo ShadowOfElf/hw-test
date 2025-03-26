@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net"
 	"sync"
@@ -32,12 +33,13 @@ func TestTelnetClient(t *testing.T) {
 			client := NewTelnetClient(l.Addr().String(), timeout, io.NopCloser(in), out)
 			require.NoError(t, client.Connect())
 			defer func() { require.NoError(t, client.Close()) }()
-
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
 			in.WriteString("hello\n")
-			err = client.Send()
+			err = client.Send(ctx)
 			require.NoError(t, err)
 
-			err = client.Receive()
+			err = client.Receive(ctx)
 			require.NoError(t, err)
 			require.Equal(t, "world\n", out.String())
 		}()

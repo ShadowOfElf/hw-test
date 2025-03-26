@@ -12,8 +12,6 @@ import (
 	"time"
 )
 
-var done = make(chan struct{})
-
 func main() {
 	var timeout time.Duration
 	flag.DurationVar(&timeout, "timeout", 10*time.Second, "Operation timeout")
@@ -21,12 +19,14 @@ func main() {
 	args := flag.Args()
 	if len(args) != 2 {
 		_, _ = fmt.Fprint(os.Stderr, "Usage: go-telnet --timeout=TIMEOUT host port")
+		os.Exit(1)
 	}
 	host := args[0]
 	port := args[1]
 
 	if host == "" || port == "" {
 		_, _ = fmt.Fprint(os.Stderr, "Usage: go-telnet wrong host or port")
+		os.Exit(1)
 	}
 	address := net.JoinHostPort(host, port)
 
@@ -56,30 +56,16 @@ func TelnetWork(clientTelnet TelnetClient) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := clientTelnet.Send(); err != nil {
+		if err := clientTelnet.Send(ctx); err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "send msg error: %s\n", err)
 		}
 	}()
 
 	go func() {
-		if err := clientTelnet.Receive(); err != nil {
+		if err := clientTelnet.Receive(ctx); err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "read msg from server error: %s\n", err)
 		}
 	}()
 
-	ch := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				close(done)
-				return
-			case <-ch:
-				return
-			}
-		}
-	}()
-
 	wg.Wait()
-	close(ch)
 }
