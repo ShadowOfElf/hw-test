@@ -1,4 +1,3 @@
-version: "2"
 run:
   tests: true
   build-tags:
@@ -52,7 +51,6 @@ linters:
     - durationcheck
     - errorlint
     - exhaustive
-    - exportloopref
     - funlen
     - gci
     - gocognit
