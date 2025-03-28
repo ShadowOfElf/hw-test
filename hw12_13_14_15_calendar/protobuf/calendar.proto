@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package internalgrpc;
+option go_package = "./pkg/;pb";
+
+import "google/protobuf/timestamp.proto";
+
+service Calendar{
+
+}
+
+message Event {
+
+}
+
+message CreateEvent{
+  // тут передаем ивент
+}
+message EditEvent{
+  // тут передаем ивент
+}
+
+message EventResponse{
+   // тут нужно возвращать ошибку
+}
+
+message DeleteEvent{
+  // тут передаем id события
+}
+
+message ListEventByDate{
+  // передаем дату
+}
+message ListEventByWeak{
+  // передаем дату начала недели
+}
+message ListEventByMonth{
+  // передаем дату начала месяца
+}
+message ListEventResponse{
+  // тут нужно вернуть множество ивентов
+}
+
+
+
+
