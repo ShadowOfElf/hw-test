@@ -1,11 +1,14 @@
 package hw10programoptimization
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"regexp"
+	"runtime"
 	"strings"
+	"sync"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 type User struct {
@@ -20,6 +23,11 @@ type User struct {
 
 type DomainStat map[string]int
 
+var (
+	errorCountDomains = errors.New("invalid input: domain is empty")
+	errorReader       = errors.New("invalid input: reader is empty")
+)
+
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	u, err := getUsers(r)
 	if err != nil {
@@ -28,39 +36,64 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	return countDomains(u, domain)
 }
 
-type users [100_000]User
-
-func getUsers(r io.Reader) (result users, err error) {
-	content, err := io.ReadAll(r)
-	if err != nil {
-		return
+func getUsers(r io.Reader) (chan User, error) {
+	if r == nil {
+		return nil, errorReader
 	}
 
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+	decoder := json.NewDecoder(r)
+	userCh := make(chan User, runtime.GOMAXPROCS(0))
+
+	go func() {
+		defer close(userCh)
 		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
-			return
+		for {
+			if err := decoder.Decode(&user); errors.Is(err, io.EOF) {
+				break
+			} else if err != nil {
+				return
+			}
+			if user.Email != "" {
+				userCh <- user
+			}
 		}
-		result[i] = user
-	}
-	return
+	}()
+	return userCh, nil
 }
 
-func countDomains(u users, domain string) (DomainStat, error) {
-	result := make(DomainStat)
-
-	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
-			return nil, err
-		}
-
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
-			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
-		}
+func countDomains(u chan User, domain string) (DomainStat, error) {
+	if domain == "" {
+		return nil, errorCountDomains
 	}
+
+	result := make(DomainStat)
+	numWorkers := runtime.GOMAXPROCS(0)
+
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for user := range u {
+				if strings.Contains(user.Email, "."+domain) {
+					parts := strings.SplitN(user.Email, "@", 2)
+					if len(parts) != 2 {
+						continue
+					}
+					domainPart := strings.ToLower(parts[1])
+
+					mu.Lock()
+					result[domainPart]++
+					mu.Unlock()
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
+
 	return result, nil
 }
