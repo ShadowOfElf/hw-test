@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/configs"
+	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/app"
+	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/storage"
 )
 
 var configFile string
@@ -28,13 +30,28 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
+	config := configs.NewConfig(configFile)
 	logg := logger.New(config.Logger.Level)
+	logg.Info("APP Started")
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	ctxStor, cancelStorage := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelStorage()
 
-	server := internalhttp.NewServer(logg, calendar)
+	Storage := storage.NewStorage(config.StorageDB)
+	err := Storage.Connect(ctxStor, config.Storage)
+	if err != nil {
+		logg.Error(fmt.Sprintf("Error connect: %s", err))
+	}
+	defer func() {
+		err := Storage.Close()
+		if err != nil {
+			logg.Error(fmt.Sprintf("closing DB error: %s", err))
+		}
+	}()
+
+	calendar := app.New(logg, Storage)
+
+	server := internalhttp.NewServer(logg, calendar, config.HTTP)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -42,7 +59,6 @@ func main() {
 
 	go func() {
 		<-ctx.Done()
-
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
@@ -53,7 +69,7 @@ func main() {
 
 	logg.Info("calendar is running...")
 
-	if err := server.Start(ctx); err != nil {
+	if err := server.Start(); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic

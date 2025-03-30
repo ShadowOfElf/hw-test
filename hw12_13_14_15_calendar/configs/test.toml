@@ -1,0 +1,15 @@
+[logger]
+level = "DEBUG"
+
+[storage]
+type = "DB"
+host = "localhost"
+port = "5432"
+user = "postgres"
+password = "postgres"
+dbname = "events_db"
+sslmode = "disable"
+
+[http]
+host = "127.0.0.1"
+port = "8080"
