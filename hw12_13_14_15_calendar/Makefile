@@ -23,12 +23,17 @@ version: build
 	$(BIN) version
 
 test:
-	go test -race ./internal/... ./pkg/...
+	go test -race ./internal/...
 
 install-lint-deps:
-	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.57.2
+	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.64.8
 
 lint: install-lint-deps
 	golangci-lint run ./...
+
+generate:
+	rm -rf ./pkg
+	mkdir -p ./pkg
+	protoc --go_out=./pkg --go-grpc_out=./pkg/ --proto_path=./protobuf ./protobuf/*.proto
 
 .PHONY: build run build-img run-img version test lint
