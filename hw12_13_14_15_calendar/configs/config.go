@@ -13,6 +13,11 @@ type Config struct {
 	StorageDB bool
 	Storage   StorageConf
 	HTTP      HTTPConf
+	GRPC      GRPCConf
+}
+
+type GRPCConf struct {
+	Addr string
 }
 
 type HTTPConf struct {
@@ -84,11 +89,22 @@ func NewConfig(configFile string) Config {
 		addr = "127.0.0.1:8070"
 	}
 
+	grpcHost := viper.GetString("grpc.host")
+	grpcPort := viper.GetString("grpc.port")
+
+	addrGRPC := net.JoinHostPort(grpcHost, grpcPort)
+	_, err = net.ResolveTCPAddr("tcp", addrGRPC)
+	if err != nil {
+		fmt.Println("host or port GRPC incorrect, using default")
+		addr = "127.0.0.1:8070"
+	}
+
 	return Config{
 		Logger:    LoggerConf{Level: logger.LogLevel(logLevel)},
 		StorageDB: storageDB,
 		Storage:   storage,
 		HTTP:      HTTPConf{Addr: addr},
+		GRPC:      GRPCConf{Addr: addrGRPC},
 	}
 }
 

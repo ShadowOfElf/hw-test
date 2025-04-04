@@ -5,21 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/configs"
-	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/app"
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/logger"
 )
 
 type Logger struct {
 	handler http.Handler
 	logger  logger.LogInterface
-}
-
-type Server struct {
-	Conf        configs.HTTPConf
-	logger      logger.LogInterface
-	application *app.App
-	server      *http.Server
 }
 
 func NewHandler(handlerToWrap http.Handler, logI logger.LogInterface) *Logger {
@@ -39,7 +30,9 @@ func (rw *responseWriter) WriteHeader(code int) {
 func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	rw := &responseWriter{ResponseWriter: w}
+
 	l.handler.ServeHTTP(rw, r)
+
 	l.logger.Info(
 		fmt.Sprintf(
 			"%s [%s] %s %s %s %d %d %s",

@@ -1,44 +1,57 @@
 syntax = "proto3";
 
 package internalgrpc;
-option go_package = "./pkg/;pb";
+option go_package = "./;pb";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 service Calendar{
-
+  rpc CreateEventProto(CreateEventRequest) returns (EventResponse);
+  rpc EditEventProto(EditEventRequest) returns (EventResponse);
+  rpc DeleteEventProto(DeleteEventRequest) returns (EventResponse);
+  rpc ListEventByDateProto(ListEventByDateRequest) returns (ListEventResponse);
+  rpc ListEventByWeakProto(ListEventByWeakRequest) returns (ListEventResponse);
+  rpc ListEventByMonthProto(ListEventByMonthRequest) returns (ListEventResponse);
 }
 
-message Event {
-
+message EventProto {
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp date = 3;
+  google.protobuf.Duration duration = 4;
+  string description = 5;
+  int64 user_id = 6;
+  google.protobuf.Duration notification_minute = 7;
 }
 
-message CreateEvent{
-  // тут передаем ивент
+message CreateEventRequest{
+  EventProto event = 1;
 }
-message EditEvent{
-  // тут передаем ивент
+message EditEventRequest{
+  string id = 1;
+  EventProto event = 2;
+}
+
+message DeleteEventRequest{
+  string id = 1;
 }
 
 message EventResponse{
-   // тут нужно возвращать ошибку
+  bool success = 1;
 }
 
-message DeleteEvent{
-  // тут передаем id события
+message ListEventByDateRequest{
+  google.protobuf.Timestamp data = 1;
 }
-
-message ListEventByDate{
-  // передаем дату
+message ListEventByWeakRequest{
+  google.protobuf.Timestamp start_data = 1;
 }
-message ListEventByWeak{
-  // передаем дату начала недели
-}
-message ListEventByMonth{
-  // передаем дату начала месяца
+message ListEventByMonthRequest{
+  google.protobuf.Timestamp start_data = 1;
 }
 message ListEventResponse{
-  // тут нужно вернуть множество ивентов
+  repeated EventProto events = 1;
 }
 
 

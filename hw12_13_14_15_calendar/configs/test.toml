@@ -13,3 +13,7 @@ sslmode = "disable"
 [http]
 host = "127.0.0.1"
 port = "8080"
+
+[grpc]
+host = "127.0.0.1"
+port = "50051"

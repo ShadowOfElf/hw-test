@@ -201,6 +201,7 @@ func (s *Storage) ListEventByMonth(startDate time.Time) ([]unityres.Event, error
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	endDate := startDate.AddDate(0, 1, 0)
+
 	rows, err := s.db.QueryContext(
 		ctx,
 		`

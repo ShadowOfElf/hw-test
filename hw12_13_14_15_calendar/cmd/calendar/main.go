@@ -12,6 +12,7 @@ import (
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/configs"
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/app"
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/logger"
+	internalgrpc "github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/server/http"
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/storage"
 )
@@ -51,7 +52,8 @@ func main() {
 
 	calendar := app.New(logg, Storage)
 
-	server := internalhttp.NewServer(logg, calendar, config.HTTP)
+	server := internalhttp.NewServer(calendar, config.HTTP)
+	grpc := internalgrpc.NewGRPCServer(calendar, config.GRPC)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -65,9 +67,17 @@ func main() {
 		if err := server.Stop(ctx); err != nil {
 			logg.Error("failed to stop http server: " + err.Error())
 		}
+
+		if err := grpc.Stop(); err != nil {
+			logg.Error("failed to stop grpc server: " + err.Error())
+		}
 	}()
 
 	logg.Info("calendar is running...")
+
+	if err := grpc.Start(); err != nil {
+		logg.Error("failed to start grpc server: " + err.Error())
+	}
 
 	if err := server.Start(); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
