@@ -143,15 +143,18 @@ func SchedulerApp(logg logger.LogInterface, _ unityres.UnityStorageInterface, co
 			}
 
 			for _, event := range resp.Events {
-				notif := unityres.Notification{
-					EventID:    event.Id,
-					EventTitle: event.Title,
-					EventDate:  event.Date.AsTime(),
-					UserID:     int(event.UserId),
-				}
-				err = rabbit.SendNotification(context.Background(), notif)
-				if err != nil {
-					logg.Error(fmt.Sprintf("failed send notif: %s", err))
+				notificationTime := event.Date.AsTime().Add(-event.NotificationMinute.AsDuration())
+				if notificationTime.Before(time.Now()) && event.Date.AsTime().After(time.Now()) {
+					notif := unityres.Notification{
+						EventID:    event.Id,
+						EventTitle: event.Title,
+						EventDate:  event.Date.AsTime(),
+						UserID:     int(event.UserId),
+					}
+					err = rabbit.SendNotification(context.Background(), notif)
+					if err != nil {
+						logg.Error(fmt.Sprintf("failed send notif: %s", err))
+					}
 				}
 			}
 		}
