@@ -1,5 +1,6 @@
 [app]
-type = "main"
+type="scheduler"
+upd=1
 
 [logger]
 level = "DEBUG"
@@ -15,8 +16,14 @@ sslmode = "disable"
 
 [http]
 host = "127.0.0.1"
-port = "8080"
+port = "8090"
 
 [grpc]
 host = "127.0.0.1"
 port = "50051"
+
+[rabbit]
+user = "admin"
+password = "admin"
+host =  "127.0.0.1"
+port = "5672"

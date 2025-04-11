@@ -13,3 +13,10 @@ type Event struct {
 	UserID             int           `json:"userid"`
 	NotificationMinute time.Duration `json:"notificationMinute"`
 }
+
+type Notification struct {
+	EventID    string    `json:"eventId"`
+	EventTitle string    `json:"eventTitle"`
+	EventDate  time.Time `json:"eventDate"`
+	UserID     int       `json:"userId"`
+}
