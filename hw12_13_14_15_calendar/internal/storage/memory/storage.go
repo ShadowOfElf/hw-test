@@ -78,7 +78,7 @@ func (s *StorageMem) EditEvent(id string, event unityres.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, existEvent := range s.events {
-		if event.Date.Equal(existEvent.Date) {
+		if event.Date.Equal(existEvent.Date) && existEvent.ID != id {
 			return unityres.ErrDateBusy
 		}
 	}

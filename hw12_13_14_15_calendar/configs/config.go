@@ -3,16 +3,41 @@ package configs
 import (
 	"fmt"
 	"net"
+	"strconv"
+	"time"
 
 	"github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar/internal/logger"
 	"github.com/spf13/viper"
 )
 
+type AppTypes string
+
+const (
+	MainApp      AppTypes = "main"
+	SchedulerApp AppTypes = "scheduler"
+	SenderApp    AppTypes = "sender"
+)
+
 type Config struct {
-	Logger    LoggerConf
-	StorageDB bool
-	Storage   StorageConf
-	HTTP      HTTPConf
+	Logger     LoggerConf
+	StorageDB  bool
+	Storage    StorageConf
+	HTTP       HTTPConf
+	GRPC       GRPCConf
+	AppType    AppTypes
+	Rabbit     RabbitMQConf
+	UpdateTime time.Duration
+}
+
+type RabbitMQConf struct {
+	User     string
+	Password string
+	Host     string
+	Port     string
+}
+
+type GRPCConf struct {
+	Addr string
 }
 
 type HTTPConf struct {
@@ -37,6 +62,12 @@ func NewConfig(configFile string) Config {
 
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("Configuration is not loaded, default values will be used")
+	}
+
+	appType := viper.GetString("app.type")
+	if !appTypeValidator(appType) {
+		fmt.Println("app type automatic set to main")
+		appType = "main"
 	}
 
 	logLevel := viper.GetString("logger.level")
@@ -84,11 +115,32 @@ func NewConfig(configFile string) Config {
 		addr = "127.0.0.1:8070"
 	}
 
+	grpcHost := viper.GetString("grpc.host")
+	grpcPort := viper.GetString("grpc.port")
+
+	addrGRPC := net.JoinHostPort(grpcHost, grpcPort)
+	_, err = net.ResolveTCPAddr("tcp", addrGRPC)
+	if err != nil {
+		fmt.Println("host or port GRPC incorrect, using default")
+		addr = "127.0.0.1:8070"
+	}
+
+	updTime := 1
+	if updTimeStr := viper.GetString("app.upd"); updTimeStr != "" {
+		if newUpdTime, err := strconv.Atoi(updTimeStr); err == nil {
+			updTime = newUpdTime
+		}
+	}
+
 	return Config{
-		Logger:    LoggerConf{Level: logger.LogLevel(logLevel)},
-		StorageDB: storageDB,
-		Storage:   storage,
-		HTTP:      HTTPConf{Addr: addr},
+		Logger:     LoggerConf{Level: logger.LogLevel(logLevel)},
+		StorageDB:  storageDB,
+		Storage:    storage,
+		HTTP:       HTTPConf{Addr: addr},
+		GRPC:       GRPCConf{Addr: addrGRPC},
+		AppType:    AppTypes(appType),
+		Rabbit:     getRabbitConf(),
+		UpdateTime: time.Duration(updTime) * time.Minute,
 	}
 }
 
@@ -100,4 +152,33 @@ func logLevelValidator(level string) bool {
 		string(logger.ErrorLevel): true,
 	}
 	return allowLevel[level]
+}
+
+func appTypeValidator(appType string) bool {
+	allowType := map[string]bool{
+		string(MainApp):      true,
+		string(SchedulerApp): true,
+		string(SenderApp):    true,
+	}
+	return allowType[appType]
+}
+
+func getRabbitConf() RabbitMQConf {
+	user := viper.GetString("rabbit.user")
+	password := viper.GetString("rabbit.password")
+	host := viper.GetString("rabbit.host")
+	port := viper.GetString("rabbit.port")
+
+	if host == "" || port == "" {
+		fmt.Println("host or port is empty, use default")
+		host = "127.0.0.1"
+		port = "5672"
+	}
+
+	return RabbitMQConf{
+		User:     user,
+		Password: password,
+		Host:     host,
+		Port:     port,
+	}
 }

@@ -23,6 +23,9 @@ linters-settings:
           - github.com/jmoiron/sqlx
           - github.com/pkg/errors
           - github.com/spf13/viper
+          - google.golang.org/grpc
+          - google.golang.org/protobuf
+          - github.com/rabbitmq
       Test:
         files:
           - $test
@@ -30,6 +33,7 @@ linters-settings:
           - $gostd
           - github.com/stretchr/testify
           - github.com/ShadowOfElf/hw_test/hw12_13_14_15_calendar
+          - google.golang.org/protobuf/
 
 issues:
   exclude-rules:
