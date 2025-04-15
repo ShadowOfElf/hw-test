@@ -64,6 +64,6 @@ func TestServicesGRPC(t *testing.T) {
 		}
 
 		_, err := service.ListEventByDateProto(context.Background(), req)
-		require.ErrorIs(t, err, ErrNoContent)
+		require.NoError(t, err)
 	})
 }

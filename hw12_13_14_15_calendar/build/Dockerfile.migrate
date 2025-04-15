@@ -1,0 +1,12 @@
+# Используем alpine для минимизации размера
+FROM alpine:3.9
+
+# Устанавливаем curl и migrate
+RUN apk add --no-cache curl && \
+    curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz -C /usr/local/bin
+
+# Копируем миграции и конфигурацию
+COPY ./migrations /migrations
+
+# Команда для запуска миграций
+CMD ["migrate", "-path", "/migrations", "-database", "postgres://postgres:postgres@pg:5432/events_db?sslmode=disable", "up"]

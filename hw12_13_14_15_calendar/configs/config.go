@@ -140,7 +140,7 @@ func NewConfig(configFile string) Config {
 		GRPC:       GRPCConf{Addr: addrGRPC},
 		AppType:    AppTypes(appType),
 		Rabbit:     getRabbitConf(),
-		UpdateTime: time.Duration(updTime) * time.Minute,
+		UpdateTime: time.Duration(updTime) * 10 * time.Second,
 	}
 }
 
@@ -170,7 +170,7 @@ func getRabbitConf() RabbitMQConf {
 	port := viper.GetString("rabbit.port")
 
 	if host == "" || port == "" {
-		fmt.Println("host or port is empty, use default")
+		fmt.Println("host or port rabbit is empty, use default")
 		host = "127.0.0.1"
 		port = "5672"
 	}

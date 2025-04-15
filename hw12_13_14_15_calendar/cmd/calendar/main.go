@@ -44,7 +44,7 @@ func main() {
 	Storage := storage.NewStorage(config.StorageDB)
 	err := Storage.Connect(ctxStor, config.Storage)
 	if err != nil {
-		logg.Error(fmt.Sprintf("Error connect: %s", err))
+		logg.Error(fmt.Sprintf("Error connect DB: %s", err))
 	}
 	defer func() {
 		err := Storage.Close()
@@ -139,7 +139,7 @@ func SchedulerApp(logg logger.LogInterface, _ unityres.UnityStorageInterface, co
 			resp, err := client.ListEventByDateProto(ctx, grpcService.GetReqByDay(time.Now()))
 			if err != nil {
 				logg.Error(fmt.Sprintf("failed get events from DB: %s", err))
-				return
+				continue
 			}
 
 			for _, event := range resp.Events {
