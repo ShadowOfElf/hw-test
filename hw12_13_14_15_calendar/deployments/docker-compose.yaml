@@ -1,1 +1,108 @@
-version: "3"
+version: '3.8'
+
+services:
+  pg:
+    image: postgres
+    container_name: pg
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=events_db
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d events_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_VHOST=event_vhost
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    restart: always
+
+  calendar:
+    build:
+      context: ../.
+      dockerfile: ./build/Dockerfile
+      args:
+        LDFLAGS: "${LDFLAGS}"
+    ports:
+      - 8080:8080
+      - 50051:50051
+    depends_on:
+      pg:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    volumes:
+      - calendar:/calendar
+    networks:
+      - app-network
+    restart: always
+
+  calendar-scheduler:
+    build:
+      context: ../.
+      dockerfile: ./build/Dockerfile.scheduler
+      args:
+        LDFLAGS: "${LDFLAGS}"
+    depends_on:
+      - calendar
+    volumes:
+      - calendar:/calendar
+    networks:
+      - app-network
+    restart: always
+
+  calendar-sender:
+    build:
+      context: ../.
+      dockerfile: ./build/Dockerfile.sender
+      args:
+        LDFLAGS: "${LDFLAGS}"
+    depends_on:
+      - calendar
+    volumes:
+      - calendar:/calendar
+    networks:
+      - app-network
+    restart: always
+
+  migrate:
+    build:
+      context: ../.
+      dockerfile: ./build/Dockerfile.migrate
+    container_name: migrate
+    depends_on:
+      pg:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: "no"
+
+networks:
+      app-network:
+        driver: bridge
+
+volumes:
+  pg_data:
+  rabbitmq_data:
+  calendar:

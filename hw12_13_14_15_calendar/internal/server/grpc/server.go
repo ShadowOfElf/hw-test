@@ -82,7 +82,7 @@ func (s *ServiceGRPC) ListEventByDateProto(
 		return nil, err
 	}
 
-	return eventToMessage(events)
+	return eventToMessage(events), nil
 }
 
 func (s *ServiceGRPC) ListEventByWeakProto(
@@ -99,7 +99,7 @@ func (s *ServiceGRPC) ListEventByWeakProto(
 		return nil, err
 	}
 
-	return eventToMessage(events)
+	return eventToMessage(events), nil
 }
 
 func (s *ServiceGRPC) ListEventByMonthProto(
@@ -116,7 +116,7 @@ func (s *ServiceGRPC) ListEventByMonthProto(
 		return nil, err
 	}
 
-	return eventToMessage(events)
+	return eventToMessage(events), nil
 }
 
 func messageToEvent(event *pb.EventProto) unityres.Event {
@@ -131,11 +131,7 @@ func messageToEvent(event *pb.EventProto) unityres.Event {
 	}
 }
 
-func eventToMessage(events []unityres.Event) (*pb.ListEventResponse, error) {
-	if events == nil {
-		return nil, ErrNoContent
-	}
-
+func eventToMessage(events []unityres.Event) *pb.ListEventResponse {
 	resEvents := make([]*pb.EventProto, 0, len(events))
 
 	for _, event := range events {
@@ -149,7 +145,7 @@ func eventToMessage(events []unityres.Event) (*pb.ListEventResponse, error) {
 			NotificationMinute: durationpb.New(event.NotificationMinute),
 		})
 	}
-	return &pb.ListEventResponse{Events: resEvents}, nil
+	return &pb.ListEventResponse{Events: resEvents}
 }
 
 type ServerGRPC struct {

@@ -17,13 +17,10 @@ run: build
 	$(BIN_SND) -config ./configs/test_sender.toml
 
 build-img:
-	docker build \
-		--build-arg=LDFLAGS="$(LDFLAGS)" \
-		-t $(DOCKER_IMG) \
-		-f build/Dockerfile .
+	docker-compose -f ./deployments/docker-compose.yaml build --build-arg LDFLAGS="${LDFLAGS}"
 
 run-img: build-img
-	docker run $(DOCKER_IMG)
+	docker-compose -f ./deployments/docker-compose.yaml up
 
 version: build
 	$(BIN) version
