@@ -20,7 +20,10 @@ build-img:
 	docker-compose -f ./deployments/docker-compose.yaml build --build-arg LDFLAGS="${LDFLAGS}"
 
 run-img: build-img
-	docker-compose -f ./deployments/docker-compose.yaml up
+	docker-compose -f ./deployments/docker-compose.yaml up -d
+
+stop-img:
+	docker-compose -f ./deployments/docker-compose.yaml stop
 
 version: build
 	$(BIN) version
