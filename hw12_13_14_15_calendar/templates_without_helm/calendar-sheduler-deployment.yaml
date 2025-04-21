@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendar-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calendar-scheduler
+  template:
+    metadata:
+      labels:
+        app: calendar-scheduler
+    spec:
+      containers:
+      - name: calendar-scheduler
+        image: shadowofelf/calendar-scheduler:latest
+        volumeMounts:
+        - name: calendar-data
+          mountPath: /calendar
+      volumes:
+      - name: calendar-data
+        emptyDir: {}

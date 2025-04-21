@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: calendar-sender-service
+spec:
+  selector:
+    app: calendar-sender
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8082
+  type: ClusterIP
