@@ -1,0 +1,119 @@
+# Global settings
+replicaCount: 1
+
+# Calendar Deployment
+calendar:
+  image:
+    repository: shadowofelf/calendar
+    tag: latest
+    pullPolicy: IfNotPresent
+  ports:
+    - containerPort: 8080
+    - containerPort: 50051
+  volumeMounts:
+    - name: calendar-data
+      mountPath: /calendar
+  volumes:
+    - name: calendar-data
+      emptyDir: {}
+
+# Calendar Sender Deployment
+calendarSender:
+  image:
+    repository: shadowofelf/calendar-sender
+    tag: latest
+    pullPolicy: IfNotPresent
+  volumeMounts:
+    - name: calendar-data
+      mountPath: /calendar
+  volumes:
+    - name: calendar-data
+      emptyDir: {}
+
+# Calendar Scheduler Deployment
+calendarScheduler:
+  image:
+    repository: shadowofelf/calendar-scheduler
+    tag: latest
+    pullPolicy: IfNotPresent
+  volumeMounts:
+    - name: calendar-data
+      mountPath: /calendar
+  volumes:
+    - name: calendar-data
+      emptyDir: {}
+
+# PostgreSQL Deployment
+postgres:
+  image:
+    repository: postgres
+    tag: latest
+    pullPolicy: IfNotPresent
+  env:
+    POSTGRES_USER: "postgres"
+    POSTGRES_PASSWORD: "postgres"
+    POSTGRES_DB: "events_db"
+  ports:
+    - containerPort: 5432
+  volumeMounts:
+    - name: pg-data
+      mountPath: /var/lib/postgresql/data
+  volumes:
+    - name: pg-data
+      persistentVolumeClaim:
+        claimName: pg-data-pvc
+  readinessProbe:
+    exec:
+      command:
+        - pg_isready
+        - -U
+        - postgres
+        - -d
+        - events_db
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+# RabbitMQ Deployment
+rabbitmq:
+  image:
+    repository: rabbitmq
+    tag: 3-management
+    pullPolicy: IfNotPresent
+  env:
+    RABBITMQ_DEFAULT_USER: "admin"
+    RABBITMQ_DEFAULT_PASS: "admin"
+    RABBITMQ_DEFAULT_VHOST: "event_vhost"
+  ports:
+    - containerPort: 5672
+    - containerPort: 15672
+  volumeMounts:
+    - name: rabbit-data
+      mountPath: /var/lib/rabbitmq
+  volumes:
+    - name: rabbit-data
+      persistentVolumeClaim:
+        claimName: rabbit-data-pvc
+
+# Services
+service:
+  type: ClusterIP
+  calendar:
+    port: 80
+    targetPort: 8080
+  calendarSender:
+    port: 80
+    targetPort: 8082
+  calendarScheduler:
+    port: 80
+    targetPort: 8081
+  postgres:
+    port: 5432
+    targetPort: 5432
+  rabbitmq:
+    ports:
+      - name: web
+        port: 5672
+        targetPort: 5672
+      - name: back
+        port: 15672
+        targetPort: 15672

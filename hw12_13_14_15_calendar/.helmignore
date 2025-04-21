@@ -1,0 +1,18 @@
+# .helmignore
+# Исключаем временные файлы и директории
+.git/
+.github/
+.gitignore
+README.md
+LICENSE
+*.log
+*.tmp
+*.bak
+
+# Исключаем ненужные файлы
+*.tgz
+*.zip
+*.tar.gz
+
+# Исключаем локальные зависимости
+bin/

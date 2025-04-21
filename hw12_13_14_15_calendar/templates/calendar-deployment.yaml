@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "calendar-app.fullname" . }}-calendar
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "calendar-app.fullname" . }}-calendar
+  template:
+    metadata:
+      labels:
+        app: {{ include "calendar-app.fullname" . }}-calendar
+    spec:
+      containers:
+        - name: calendar
+          image: "{{ .Values.calendar.image.repository }}:{{ .Values.calendar.image.tag }}"
+          imagePullPolicy: {{ .Values.calendar.image.pullPolicy }}
+          ports:
+            {{- toYaml .Values.calendar.ports | nindent 12 }}
+          volumeMounts:
+            {{- toYaml .Values.calendar.volumeMounts | nindent 12 }}
+      volumes:
+        {{- toYaml .Values.calendar.volumes | nindent 8 }}

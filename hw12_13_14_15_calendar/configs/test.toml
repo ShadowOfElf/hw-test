@@ -6,7 +6,7 @@ level = "DEBUG"
 
 [storage]
 type = "DB"
-host = "localhost"
+host = "pg"
 port = "5432"
 user = "postgres"
 password = "postgres"
@@ -14,9 +14,9 @@ dbname = "events_db"
 sslmode = "disable"
 
 [http]
-host = "127.0.0.1"
+host = ""
 port = "8080"
 
 [grpc]
-host = "127.0.0.1"
+host = ""
 port = "50051"

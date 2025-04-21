@@ -1,7 +1,7 @@
 # Собираем в гошке
 FROM golang:1.23-alpine as build
 
-ENV BIN_FILE /opt/calendar/calendar
+ENV BIN_FILE /opt/calendar/calendar_scheduler
 ENV CODE_DIR /go/src/
 
 WORKDIR ${CODE_DIR}
@@ -24,18 +24,13 @@ RUN CGO_ENABLED=0 go build \
 FROM alpine:3.9
 
 LABEL ORGANIZATION="OTUS Online Education"
-LABEL SERVICE="calendar"
+LABEL SERVICE="calendar-scheduler"
 LABEL MAINTAINERS="abel02@mail.ru"
 
-
-COPY --from=build /go/src/migrations opt/calendar/migrations
-RUN apk add --no-cache curl && \
-    curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz -C /usr/local/bin
-
-ENV BIN_FILE "/opt/calendar/calendar"
+ENV BIN_FILE "/opt/calendar/calendar_scheduler"
 COPY --from=build ${BIN_FILE} ${BIN_FILE}
 
-ENV CONFIG_FILE /etc/calendar/test.toml
-COPY ./configs/test.toml ${CONFIG_FILE}
+ENV CONFIG_FILE /etc/calendar/test_scheduler.toml
+COPY ./configs/test_scheduler.toml ${CONFIG_FILE}
 
 CMD ${BIN_FILE} -config ${CONFIG_FILE}
